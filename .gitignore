@@ -2,3 +2,4 @@ input_messages/
 venv
 __pycache__
 text_files/
+.env
