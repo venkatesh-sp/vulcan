@@ -2,7 +2,7 @@ from fastapi import Depends, APIRouter, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
-from models import User, get_db
+from models import get_db, User, Account, SubAccount
 
 from auth import (
     get_current_user,
@@ -35,11 +35,25 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Username already exists"
         )
-
+    # Creates a new user with unique username
     new_user = User(username=user.username, password=hash_password(user.password))
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+
+    #  Creates user account with unique account name
+    user_account = Account(name=f"{new_user.username}_account", user_id=new_user.id)
+    db.add(user_account)
+    db.commit()
+    db.refresh(user_account)
+
+    #  Creates user's sub-account
+    user_sub_account = SubAccount(
+        name=f"{new_user.username}_sub_account", account_id=user_account.id
+    )
+    db.add(user_sub_account)
+    db.commit()
+    db.refresh(user_sub_account)
     return {"message": "User created successfully"}
 
 
